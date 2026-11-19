@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Black Casa do Sono - Tropa da Casa</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#10b981',
+                            600: '#059669',
+                            darkBg: '#0f172a',
+                            cardBg: '#1e293b',
+                            borderBg: '#334155'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- PWA Meta Tags & Manifesto Dinâmico para Instalação no Chrome -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Black Casa do Sono">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%2310b981'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='260'>🐼</text></svg>">
+    <script>
+        (function setupPWA() {
+            const svgIcon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%2310b981'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='260'>🐼</text></svg>";
+            const manifestData = {
+                name: "Black Casa do Sono - Tropa da Casa",
+                short_name: "Casa do Sono",
+                description: "Dashboard de Vendas e Batalha de Equipes - Casa do Sono",
+                start_url: window.location.href,
+                display: "standalone",
+                background_color: "#0f172a",
+                theme_color: "#10b981",
+                orientation: "any",
+                icons: [
+                    { src: svgIcon, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+                    { src: svgIcon, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+                ]
+            };
+            const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = URL.createObjectURL(blob);
+            document.head.appendChild(manifestLink);
+        })();
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16 bg-slate-950">
+
+    <!-- CABEÇALHO COMPACTO MOBILE -->
+    <header class="border-b border-slate-800 bg-slate-900/95 sticky top-0 z-40 backdrop-blur-md">
+        <div id="headerContainer" class="max-w-md mx-auto px-3 py-3 flex items-center justify-between gap-2 transition-all duration-300">
+            <div class="flex items-center space-x-2.5 overflow-hidden">
+                <div class="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 shrink-0">
+                    <i class="fa-solid fa-bed text-lg"></i>
+                </div>
+                <div class="truncate">
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="text-sm font-extrabold tracking-tight text-white truncate">Black Casa do Sono</h1>
+                        <span class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full shrink-0">
+                            🐼 Tropa
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 truncate">01/11 a 07/12 • <span id="saveStatusText" class="text-emerald-400">Salvo</span></p>
+                </div>
+            </div>
+
+            <!-- BOTÕES DE AÇÃO -->
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button id="btnInstallPwa" onclick="triggerInstallPWA()" class="px-2.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-lg border border-purple-400 shadow-sm transition flex items-center gap-1 cursor-pointer" title="Instalar como Aplicativo no Chrome">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Instalar</span>
+                </button>
+                <button id="btnToggleView" onclick="toggleViewMode()" class="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-xs rounded-lg border border-slate-700 transition flex items-center gap-1 cursor-pointer" title="Alternar Mobile / Desktop">
+                    <i id="viewModeIcon" class="fa-solid fa-desktop"></i>
+                    <span id="viewModeLabel" class="hidden sm:inline">Desktop</span>
+                </button>
+                <button onclick="toggleModal(true)" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg border border-emerald-400 shadow-sm transition flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Editar</span>
+                </button>
+                <button onclick="downloadSelfHTML()" class="px-2.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg border border-blue-400 transition flex items-center gap-1 cursor-pointer" title="Salvar Ficheiro HTML com Dados">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span class="hidden sm:inline">Salvar</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main id="mainContainer" class="max-w-md mx-auto px-3 pt-3 space-y-3 transition-all duration-300">
+
+        <!-- CARDS KPIS -->
+        <section id="kpiGrid" class="grid grid-cols-3 gap-2">
+            
+            <!-- KPI 1: TOTAL VENDIDO -->
+            <div class="card p-2.5 border-t-4 border-t-emerald-500 flex flex-col justify-between">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">Vendido</span>
+                <div class="my-1">
+                    <div id="kpiVendido" class="text-sm sm:text-base font-extrabold text-white leading-tight">€ 0</div>
+                </div>
+                <p id="kpiProgressoPercent" class="text-[9px] text-emerald-400 font-semibold truncate">0% meta</p>
+            </div>
+
+            <!-- KPI 2: META DO TIME -->
+            <div class="card p-2.5 border-t-4 border-t-blue-500 flex flex-col justify-between">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">Meta Total</span>
+                <div class="my-1">
+                    <div id="kpiMeta" class="text-sm sm:text-base font-extrabold text-white leading-tight">€ 0</div>
+                </div>
+                <p id="kpiMetaSubtitle" class="text-[9px] text-slate-400 truncate">Alvo do time</p>
+            </div>
+
+            <!-- KPI 3: VALOR FALTANTE -->
+            <div class="card p-2.5 border-t-4 border-t-rose-500 flex flex-col justify-between">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider truncate">Faltante</span>
+                <div class="my-1">
+                    <div id="kpiFaltante" class="text-sm sm:text-base font-extrabold text-rose-400 leading-tight">€ 0</div>
+                </div>
+                <p class="text-[9px] text-slate-400 truncate">Pendente</p>
+            </div>
+
+        </section>
+
+        <!-- GRÁFICO E TABELA (LADO A LADO NO DESKTOP) -->
+        <div id="middleGrid" class="grid grid-cols-1 gap-3">
+            <!-- GRÁFICO COMPACTO -->
+            <section class="card p-3 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-bold text-white">Desempenho por Loja</h3>
+                    <span class="text-[10px] text-slate-400">Vendido vs Meta</span>
+                </div>
+                <div id="chartWrapper" class="h-48 relative">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </section>
+
+            <!-- TABELA DE DETALHAMENTO POR LOJA -->
+            <section class="card p-3">
+                <div class="mb-2">
+                    <h3 class="text-xs font-bold text-white">Lojas da Tropa da Casa</h3>
+                    <p class="text-[10px] text-slate-400">Valores e % de atingimento individual</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left text-slate-200">
+                        <thead class="text-[10px] text-slate-400 uppercase bg-slate-800/80 border-b border-slate-700">
+                            <tr>
+                                <th scope="col" class="py-2 px-2 font-semibold">Loja</th>
+                                <th scope="col" class="py-2 px-2 font-semibold text-right">Meta</th>
+                                <th scope="col" class="py-2 px-2 font-semibold text-right">Vendido</th>
+                                <th scope="col" class="py-2 px-2 font-semibold text-center">%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="storeTableBody" class="divide-y divide-slate-800/60">
+                            <!-- Gerado via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- COMPETIÇÃO E PROJEÇÃO (LADO A LADO NO DESKTOP) -->
+        <div id="bottomGrid" class="grid grid-cols-1 gap-3">
+            <!-- COMPETIÇÃO ENTRE EQUIPES (TROPA DA CASA VS OS ARRETADOS DO SONO) -->
+            <section class="card p-3 border-t-2 border-t-amber-500/70 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-trophy text-amber-400"></i> Batalha de Equipes
+                    </h3>
+                    <span id="compStatusBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400">
+                        🐼 Na frente
+                    </span>
+                </div>
+
+                <!-- Barra Tropa da Casa -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-[11px]">
+                        <span class="font-bold text-emerald-400 flex items-center gap-1">🐼 Tropa da Casa</span>
+                        <span id="compTropaVal" class="font-extrabold text-white">€ 0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/80">
+                        <div id="compTropaBar" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Barra Os Arretados do Sono -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-[11px]">
+                        <span class="font-bold text-orange-400 flex items-center gap-1">🔥 Os Arretados do Sono</span>
+                        <span id="compArretadosVal" class="font-extrabold text-white">€ 0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700/80">
+                        <div id="compArretadosBar" class="bg-orange-500 h-full rounded-full transition-all duration-500" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Diferença entre equipes -->
+                <div class="bg-slate-900/90 rounded-lg p-2 border border-slate-800 flex items-center justify-between">
+                    <span class="text-[10px] text-slate-400">Diferença atual:</span>
+                    <span id="compDiffText" class="text-xs font-extrabold text-white">€ 0</span>
+                </div>
+            </section>
+
+            <!-- PROJEÇÃO ATÉ O FINAL DA CAMPANHA (07/12) -->
+            <section class="card p-3 border-l-4 border-l-purple-500 flex items-center justify-between gap-2">
+                <div class="space-y-0.5">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-purple-400 text-xs"></i>
+                        <h3 class="text-xs font-bold text-white">Projeção Final (07/12)</h3>
+                    </div>
+                    <p id="projMediaDiaria" class="text-[10px] text-slate-400">Média: € 0/dia (37 dias totais)</p>
+                </div>
+                <div class="text-right shrink-0">
+                    <div id="projValorFinal" class="text-base font-extrabold text-purple-400 leading-tight">€ 0</div>
+                    <p id="projMetaStatus" class="text-[10px] font-semibold text-slate-300">0% da meta</p>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE EDIÇÃO DE VENDAS E METAS -->
+    <div id="updateModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-900 border-t sm:border border-slate-700 rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl p-4 sm:p-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
+                <div class="flex items-center gap-2">
+                    <div class="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Editar Vendas e Metas</h3>
+                        <p class="text-[10px] text-slate-400">Ajuste os valores das equipes e lojas</p>
+                    </div>
+                </div>
+                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white p-1 text-base">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="editForm" onsubmit="handleFormSubmit(event)" class="py-3 space-y-3">
+                <!-- CAMPO PARA TOTAL DA EQUIPE RIVAL (OS ARRETADOS DO SONO) -->
+                <div class="bg-orange-950/30 p-3 rounded-xl border border-orange-500/30 space-y-1.5">
+                    <label class="text-xs font-bold text-orange-300 flex items-center gap-1.5">
+                        <span>🔥 Total Vendido - Os Arretados do Sono (€)</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-orange-400 text-xs font-bold">€</span>
+                        <input type="number" step="1" id="inputRivalSold" name="rivalSold" required
+                            class="w-full bg-slate-900 border border-orange-500/40 rounded-lg pl-7 pr-3 py-2 text-sm text-white font-extrabold focus:ring-orange-500 focus:border-orange-500">
+                    </div>
+                    <p class="text-[10px] text-slate-400">Valor total acumulado da equipe concorrente.</p>
+                </div>
+
+                <!-- CAMPO PARA META TOTAL DO TIME -->
+                <div class="bg-blue-950/40 p-3 rounded-xl border border-blue-500/30 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye text-blue-400"></i> Meta Total Tropa da Casa (€)
+                        </label>
+                        <button type="button" onclick="syncTotalTargetWithStores()" class="text-[10px] text-blue-400 hover:text-blue-300 underline">
+                            Somar lojas
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-blue-400 text-xs font-bold">€</span>
+                        <input type="number" step="1" id="inputGlobalTarget" name="globalTarget" required
+                            class="w-full bg-slate-900 border border-blue-500/40 rounded-lg pl-7 pr-3 py-2 text-sm text-white font-extrabold focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div id="formInputsContainer" class="space-y-2.5">
+                    <!-- Inputs gerados via JS -->
+                </div>
+
+                <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                    <button type="button" onclick="resetDefault()" class="px-2.5 py-2 text-[11px] font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 rounded-lg">
+                        Restaurar Padrão
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="toggleModal(false)" class="px-3 py-2 text-[11px] font-semibold text-slate-400 hover:text-white">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] rounded-lg shadow-sm">
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE INSTRUÇÃO DE INSTALAÇÃO NO CHROME -->
+    <div id="installHelpModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-sm shadow-2xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-purple-500/20 text-purple-400 rounded-lg">
+                        <i class="fa-brands fa-chrome text-lg"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-white">Instalar no Google Chrome</h3>
+                </div>
+                <button onclick="document.getElementById('installHelpModal').classList.add('hidden')" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-2.5 text-xs text-slate-300 leading-relaxed">
+                <p>Para transformar este painel em um aplicativo na sua tela inicial:</p>
+                <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-2">
+                    <p><strong class="text-white">1. No Telemóvel (Android):</strong> Toque nos <strong class="text-purple-400">3 pontinhos (⋮)</strong> no canto superior direito do Chrome e selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.</p>
+                    <p><strong class="text-white">2. No Computador (PC/Mac):</strong> Clique nos <strong class="text-purple-400">3 pontinhos (⋮)</strong> do Chrome → <strong>"Guardar e partilhar"</strong> → <strong>"Instalar página como aplicação..."</strong>.</p>
+                </div>
+                <p class="text-[11px] text-amber-400/90"><i class="fa-solid fa-circle-info mr-1"></i> Nota: Se abriu a partir de um ficheiro local (<code>file://</code>), hospedar num link (ex: Netlify Drop ou GitHub Pages) ativa a instalação automática com 1 clique.</p>
+            </div>
+            <button onclick="document.getElementById('installHelpModal').classList.add('hidden')" class="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl transition">
+                Entendi
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGICA JAVASCRIPT -->
+    <script id="embeddedStateScript">
+        // Estado embutido para persistência mesmo ao baixar ou mover o arquivo HTML
+        window.__EMBEDDED_DASHBOARD_STATE__ = null;
+    </script>
+    <script>
+        // Dados Padrão Iniciais
+        const defaultStoresData = [
+            { name: "Sintra", target: 155000, sold: 18071 },
+            { name: "Euro Oeiras", target: 125000, sold: 19022 },
+            { name: "UBBO", target: 70000, sold: 6896 },
+            { name: "Portimão", target: 125000, sold: 499 },
+            { name: "Oeiras Forum", target: 60000, sold: 5834 }
+        ];
+        const defaultGlobalTarget = 535000;
+        const defaultRivalSold = 48500;
+
+        // Carregar do localStorage ou do estado embutido no HTML baixado
+        function getDashboardState() {
+            const saved = localStorage.getItem('tropa_casa_do_sono_mobile_data_v4');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && Array.isArray(parsed.stores)) {
+                        return {
+                            stores: parsed.stores,
+                            globalTarget: typeof parsed.globalTarget === 'number' ? parsed.globalTarget : defaultGlobalTarget,
+                            rivalSold: typeof parsed.rivalSold === 'number' ? parsed.rivalSold : defaultRivalSold,
+                            viewMode: parsed.viewMode || 'mobile'
+                        };
+                    }
+                } catch (e) {}
+            }
+            if (window.__EMBEDDED_DASHBOARD_STATE__ && Array.isArray(window.__EMBEDDED_DASHBOARD_STATE__.stores)) {
+                return window.__EMBEDDED_DASHBOARD_STATE__;
+            }
+            return {
+                stores: JSON.parse(JSON.stringify(defaultStoresData)),
+                globalTarget: defaultGlobalTarget,
+                rivalSold: defaultRivalSold,
+                viewMode: 'mobile'
+            };
+        }
+
+        function saveDashboardState(state) {
+            localStorage.setItem('tropa_casa_do_sono_mobile_data_v4', JSON.stringify(state));
+            window.__EMBEDDED_DASHBOARD_STATE__ = state;
+            const statusEl = document.getElementById('saveStatusText');
+            if (statusEl) {
+                statusEl.innerText = 'Salvo ✓';
+                setTimeout(() => { statusEl.innerText = 'Salvo'; }, 2000);
+            }
+        }
+
+        let appState = getDashboardState();
+        let mainChartInstance = null;
+
+        // Alternar entre Versão Mobile e Versão Desktop
+        function applyViewMode(mode) {
+            const headerContainer = document.getElementById('headerContainer');
+            const mainContainer = document.getElementById('mainContainer');
+            const middleGrid = document.getElementById('middleGrid');
+            const bottomGrid = document.getElementById('bottomGrid');
+            const chartWrapper = document.getElementById('chartWrapper');
+            const icon = document.getElementById('viewModeIcon');
+            const label = document.getElementById('viewModeLabel');
+
+            if (mode === 'desktop') {
+                headerContainer.classList.remove('max-w-md');
+                headerContainer.classList.add('max-w-6xl', 'px-6');
+                mainContainer.classList.remove('max-w-md');
+                mainContainer.classList.add('max-w-6xl', 'px-6', 'pt-6', 'space-y-5');
+                middleGrid.classList.remove('grid-cols-1');
+                middleGrid.classList.add('grid-cols-1', 'md:grid-cols-2', 'gap-5');
+                bottomGrid.classList.remove('grid-cols-1');
+                bottomGrid.classList.add('grid-cols-1', 'md:grid-cols-2', 'gap-5');
+                chartWrapper.classList.remove('h-48');
+                chartWrapper.classList.add('h-64');
+                icon.className = 'fa-solid fa-mobile-screen-button';
+                label.innerText = 'Mobile';
+            } else {
+                headerContainer.classList.remove('max-w-6xl', 'px-6');
+                headerContainer.classList.add('max-w-md');
+                mainContainer.classList.remove('max-w-6xl', 'px-6', 'pt-6', 'space-y-5');
+                mainContainer.classList.add('max-w-md');
+                middleGrid.classList.remove('md:grid-cols-2', 'gap-5');
+                middleGrid.classList.add('grid-cols-1');
+                bottomGrid.classList.remove('md:grid-cols-2', 'gap-5');
+                bottomGrid.classList.add('grid-cols-1');
+                chartWrapper.classList.remove('h-64');
+                chartWrapper.classList.add('h-48');
+                icon.className = 'fa-solid fa-desktop';
+                label.innerText = 'Desktop';
+            }
+            if (mainChartInstance) mainChartInstance.resize();
+        }
+
+        function toggleViewMode() {
+            appState.viewMode = appState.viewMode === 'desktop' ? 'mobile' : 'desktop';
+            saveDashboardState(appState);
+            applyViewMode(appState.viewMode);
+        }
+
+        const formatCurrency = (val) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
+
+        // Calcular dias da campanha (01/11 a 07/12 = 37 dias)
+        function getCampaignDaysInfo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const start = new Date(year, 10, 1); // 01 de Novembro (mês 10 em JS)
+            const end = new Date(year, 11, 7);   // 07 de Dezembro (mês 11 em JS)
+            const totalDays = 37;
+
+            // Normalizar para meia-noite para contagem exata de dias
+            const todayZero = new Date(year, now.getMonth(), now.getDate());
+            let elapsedDays = Math.floor((todayZero - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            if (elapsedDays < 1) elapsedDays = 1;
+            if (elapsedDays > totalDays) elapsedDays = totalDays;
+
+            return { elapsedDays, totalDays };
+        }
+
+        // Atualizar Dashboard
+        function renderDashboard() {
+            let totalSold = 0;
+            let sumStoresTarget = 0;
+
+            const tableBody = document.getElementById('storeTableBody');
+            tableBody.innerHTML = '';
+
+            appState.stores.forEach(store => {
+                totalSold += store.sold;
+                sumStoresTarget += store.target;
+
+                const pct = store.target > 0 ? ((store.sold / store.target) * 100).toFixed(1) : 0;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2 font-semibold text-white truncate max-w-[100px]">${store.name}</td>
+                    <td class="py-2.5 px-2 text-right text-slate-300">${formatCurrency(store.target)}</td>
+                    <td class="py-2.5 px-2 text-right font-bold text-emerald-400">${formatCurrency(store.sold)}</td>
+                    <td class="py-2.5 px-2 text-center font-bold text-white">${pct.replace('.', ',')}%</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            const activeGlobalTarget = appState.globalTarget;
+            const totalFaltante = Math.max(0, activeGlobalTarget - totalSold);
+            const globalPct = activeGlobalTarget > 0 ? ((totalSold / activeGlobalTarget) * 100).toFixed(1) : 0;
+
+            document.getElementById('kpiVendido').innerText = formatCurrency(totalSold);
+            document.getElementById('kpiMeta').innerText = formatCurrency(activeGlobalTarget);
+            document.getElementById('kpiFaltante').innerText = formatCurrency(totalFaltante);
+            document.getElementById('kpiProgressoPercent').innerText = `${globalPct.replace('.', ',')}% da meta`;
+            
+            const subtitleEl = document.getElementById('kpiMetaSubtitle');
+            if (activeGlobalTarget !== sumStoresTarget) {
+                subtitleEl.innerText = `Lojas: ${formatCurrency(sumStoresTarget)}`;
+            } else {
+                subtitleEl.innerText = `Alvo consolidado`;
+            }
+
+            // Atualizar Competição entre Equipes
+            const rivalSold = appState.rivalSold || 0;
+            const maxComp = Math.max(totalSold, rivalSold, 1);
+            const tropaWidth = Math.min(100, Math.round((totalSold / maxComp) * 100));
+            const rivalWidth = Math.min(100, Math.round((rivalSold / maxComp) * 100));
+
+            document.getElementById('compTropaVal').innerText = formatCurrency(totalSold);
+            document.getElementById('compArretadosVal').innerText = formatCurrency(rivalSold);
+            document.getElementById('compTropaBar').style.width = `${tropaWidth}%`;
+            document.getElementById('compArretadosBar').style.width = `${rivalWidth}%`;
+
+            const diff = totalSold - rivalSold;
+            const badgeEl = document.getElementById('compStatusBadge');
+            const diffEl = document.getElementById('compDiffText');
+
+            if (diff > 0) {
+                badgeEl.innerText = '🐼 NA LIDERANÇA';
+                badgeEl.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                diffEl.innerText = `+${formatCurrency(diff)} à frente`;
+                diffEl.className = 'text-xs font-extrabold text-emerald-400';
+            } else if (diff < 0) {
+                badgeEl.innerText = '⚠️ ATRÁS NO PLACAR';
+                badgeEl.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                diffEl.innerText = `${formatCurrency(Math.abs(diff))} atrás`;
+                diffEl.className = 'text-xs font-extrabold text-rose-400';
+            } else {
+                badgeEl.innerText = '🤝 EMPATE TÉCNICO';
+                badgeEl.className = 'px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                diffEl.innerText = '€ 0 (Empatados)';
+                diffEl.className = 'text-xs font-extrabold text-amber-400';
+            }
+
+            // Atualizar Projeção até 07/12
+            const { elapsedDays, totalDays } = getCampaignDaysInfo();
+            const dailyAvg = totalSold / elapsedDays;
+            const projectedTotal = Math.round(dailyAvg * totalDays);
+            const projectedPct = activeGlobalTarget > 0 ? ((projectedTotal / activeGlobalTarget) * 100).toFixed(1) : 0;
+
+            document.getElementById('projValorFinal').innerText = formatCurrency(projectedTotal);
+            document.getElementById('projMediaDiaria').innerText = `Ritmo: ${formatCurrency(Math.round(dailyAvg))}/dia (Dia ${elapsedDays}/${totalDays})`;
+            
+            const projStatusEl = document.getElementById('projMetaStatus');
+            projStatusEl.innerText = `${projectedPct.replace('.', ',')}% da meta projetada`;
+            projStatusEl.className = projectedTotal >= activeGlobalTarget 
+                ? 'text-[10px] font-bold text-emerald-400' 
+                : 'text-[10px] font-semibold text-purple-300';
+
+            renderChart();
+        }
+
+        // Renderizar Gráfico Bar (Vendido vs Meta)
+        function renderChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (mainChartInstance) mainChartInstance.destroy();
+
+            mainChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: appState.stores.map(s => s.name),
+                    datasets: [
+                        {
+                            label: 'Vendido',
+                            data: appState.stores.map(s => s.sold),
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Meta',
+                            data: appState.stores.map(s => s.target),
+                            backgroundColor: '#334155',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            labels: { color: '#94a3af', font: { family: 'Inter', size: 10 }, boxWidth: 10 } 
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': ' + formatCurrency(ctx.raw)
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            ticks: { color: '#94a3af', font: { size: 9 } }, 
+                            grid: { display: false } 
+                        },
+                        y: { 
+                            ticks: { 
+                                color: '#94a3af', 
+                                font: { size: 9 },
+                                callback: v => '€' + (v >= 1000 ? (v/1000) + 'k' : v) 
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.05)' } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // Sincronizar input da Meta Total com a soma atual dos inputs das lojas no modal
+        function syncTotalTargetWithStores() {
+            let sum = 0;
+            appState.stores.forEach((_, idx) => {
+                const input = document.querySelector(`input[name="target_${idx}"]`);
+                if (input && !isNaN(parseFloat(input.value))) {
+                    sum += parseFloat(input.value);
+                }
+            });
+            document.getElementById('inputGlobalTarget').value = sum;
+        }
+        // Modal e Formulário (Meta Total + Rival + Vendas + Metas por Loja)
+        function toggleModal(show) {
+            const modal = document.getElementById('updateModal');
+            if (show) {
+                document.getElementById('inputRivalSold').value = appState.rivalSold;
+                document.getElementById('inputGlobalTarget').value = appState.globalTarget;
+                const container = document.getElementById('formInputsContainer');
+                container.innerHTML = '';
+                appState.stores.forEach((store, idx) => {
+                    container.innerHTML += `
+                        <div class="bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60 space-y-2">
+                            <div class="text-xs font-bold text-white flex items-center justify-between">
+                                <span>${store.name}</span>
+                                <span class="text-[10px] text-slate-400">Loja ${idx + 1} de ${appState.stores.length}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-1">Meta (€)</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-[11px]">€</span>
+                                        <input type="number" step="1" name="target_${idx}" value="${store.target}" required
+                                            class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-xs text-white focus:ring-emerald-500 focus:border-emerald-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 block mb-1">Vendido (€)</label>
+                                    <div class="relative">
+                                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-[11px]">€</span>
+                                        <input type="number" step="1" name="sold_${idx}" value="${store.sold}" required
+                                            class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-xs text-emerald-400 font-bold focus:ring-emerald-500 focus:border-emerald-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const newRivalSold = parseFloat(formData.get('rivalSold'));
+            if (!isNaN(newRivalSold)) {
+                appState.rivalSold = newRivalSold;
+            }
+
+            const newGlobalTarget = parseFloat(formData.get('globalTarget'));
+            if (!isNaN(newGlobalTarget)) {
+                appState.globalTarget = newGlobalTarget;
+            }
+
+            appState.stores.forEach((store, idx) => {
+                const targetVal = parseFloat(formData.get(`target_${idx}`));
+                const soldVal = parseFloat(formData.get(`sold_${idx}`));
+                if (!isNaN(targetVal)) store.target = targetVal;
+                if (!isNaN(soldVal)) store.sold = soldVal;
+            });
+
+            saveDashboardState(appState);
+            toggleModal(false);
+            renderDashboard();
+        }
+
+        function resetDefault() {
+            appState = {
+                stores: JSON.parse(JSON.stringify(defaultStoresData)),
+                globalTarget: defaultGlobalTarget,
+                rivalSold: defaultRivalSold,
+                viewMode: appState.viewMode || 'mobile'
+            };
+            saveDashboardState(appState);
+            toggleModal(false);
+            renderDashboard();
+        }
+
+        // Baixar Próprio Ficheiro HTML com os dados atuais embutidos
+        function downloadSelfHTML() {
+            saveDashboardState(appState);
+            const embeddedScript = document.getElementById('embeddedStateScript');
+            if (embeddedScript) {
+                embeddedScript.textContent = `\n        window.__EMBEDDED_DASHBOARD_STATE__ = ${JSON.stringify(appState)};\n    `;
+            }
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Dashboard_Black_Casa_do_Sono.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Suporte PWA e Instalação no Google Chrome
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            const btn = document.getElementById('btnInstallPwa');
+            if (btn) btn.classList.add('ring-2', 'ring-purple-400');
+        });
+
+        async function triggerInstallPWA() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    deferredInstallPrompt = null;
+                }
+            } else {
+                document.getElementById('installHelpModal').classList.remove('hidden');
+            }
+        }
+
+        if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+            `;
+            const swBlob = new Blob([swCode], { type: 'application/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        }
+
+        window.onload = function() {
+            applyViewMode(appState.viewMode || 'mobile');
+            renderDashboard();
+        };
+    </script>
+</body>
+</html>
